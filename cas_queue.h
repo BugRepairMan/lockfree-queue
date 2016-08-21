@@ -4,7 +4,13 @@
 #include <atomic>
 #include <stdint.h>
 
-//TODO: use union to enable access to the whole structure and each element.
+/*
+ * This queue is implemented with c++11 double-word-compare-and-swap(DWCAS) API.
+ *
+ * Node: for clang and gcc, '-mcx16' should be included in order to generate the x86-64 DWCAS instruction.
+ */
+
+//TODO: use union to enable access each element of Pointer more efficiently.
 template <typename T>
 struct Node;  			// declare at the beginning.
 

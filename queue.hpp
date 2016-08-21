@@ -1,6 +1,10 @@
 #ifndef QUEUE_H
 #define QUEUE_H
 
+/*
+ * This queue is implemented with mutex_lock and condional variables.
+ */
+
 #include <queue>
 #include <thread>
 #include <mutex>

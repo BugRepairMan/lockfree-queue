@@ -34,9 +34,6 @@ void oneProducerMultiConcumers(int n) {
 	}
 	
 	producer.join();
-	//for(auto& c : consumers) {
-	//	c.join();
-	//}
 	for(int i = 0; i < n_consume; ++i) {
 		consumers[i].join();
 	}
@@ -75,7 +72,6 @@ void multiPmultiC(int n_threads) {
 	}
 	
 	// Consumers
-	//int item;
 	for (int i = n_threads; i < n_threads*2; ++i) {
 		threads[i] = std::thread([&]() {
 			//int item;
@@ -126,33 +122,25 @@ void cas_multiPmultiC(int n_threads) {
 				for (int j = 0; j < step; ++j) {
 					q.enqueue( i*step+j );
 				}
-			std::cout << "producer: " << i << " finish\n";
 			}, i);
 	}
 
 	// Consumers
 	for (int i = n_threads; i < n_threads*2; ++i) {
-		threads[i] = std::thread([&](int i) {
+		threads[i] = std::thread([&]() {
 			int item;
 			for(int j = 0; j < step; ++j) {
 				while(!q.dequeue(&item))	;
 				dequeued[item] += 1;
 			}
-			std::cout << "consumer: " << i << " finish\n";
-		}, i );
+		});
 	}
 
-	//std::cout << "Debug Checkpoint 1\n";
-	
 	for (int i = 0; i < n_threads*2; ++i) {
 		threads[i].join();
-		//std::cout << "threads " << i << " joined\n";
 	}
 
-	//std::cout << "Debug Checkpoint 2\n";
-
 	auto end = std::chrono::high_resolution_clock::now();
-	//auto diff = end - start;
 	std::chrono::duration<double> diff = end -start;
 	std::cout << "Chrono time: " << diff.count() << "s\n";
 
@@ -160,7 +148,7 @@ void cas_multiPmultiC(int n_threads) {
 	for(int i = 0; i < N_ELEM; ++i) {
 		if(dequeued[i] != 1) {
 			std::cout << "Fail: index=" << i <<" value: " << dequeued[i] << "\n";
-			//return;
+			return;
 		}
 	}
 	
@@ -199,7 +187,6 @@ void cas_onePmultiC(int n_threads) {
 	}
 
 	auto end = std::chrono::high_resolution_clock::now();
-	//auto diff = end - start;
 	std::chrono::duration<double> diff = end -start;
 	std::cout << "Chrono time: " << diff.count() << "s\n";
 
@@ -207,7 +194,7 @@ void cas_onePmultiC(int n_threads) {
 	for(int i = 0; i < N_ELEM; ++i) {
 		if(dequeued[i] != 1) {
 			std::cout << "Fail: index=" << i <<" value: " << dequeued[i] << "\n";
-			//return;
+			return;
 		}
 	}
 	
