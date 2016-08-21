@@ -4,6 +4,7 @@
 #include <atomic>
 #include <stdint.h>
 
+//TODO: use union to enable access to the whole structure and each element.
 template <typename T>
 struct Node;  			// declare at the beginning.
 
@@ -114,7 +115,7 @@ public:
 				{
 					*pvalue = next.ptr->value;
 					desired = {next.ptr, local_head.count+1};
-					if( std::atomic_compare_exchange_weak(&_q_tail, &local_head, desired) )
+					if( std::atomic_compare_exchange_weak(&_q_head, &local_head, desired) )
 					{
 						break;
 					}

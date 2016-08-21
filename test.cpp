@@ -9,7 +9,7 @@
 
 //using namespace std;
 
-#define N_ELEM 100000
+#define N_ELEM 1000000
 
 std::vector<int> dequeued(N_ELEM);
 int n_consume = 0;
@@ -149,14 +149,15 @@ void cas_multiPmultiC(int n_threads) {
 	}
 
 	auto end = std::chrono::high_resolution_clock::now();
-	auto diff = end - start;
+	//auto diff = end - start;
+	std::chrono::duration<double> diff = end -start;
 	std::cout << "Chrono time: " << diff.count() << "s\n";
 
 	// Make sure everything went in and came back out!
 	for(int i = 0; i < N_ELEM; ++i) {
 		if(dequeued[i] != 1) {
 			std::cout << "Fail: index=" << i <<" value: " << dequeued[i] << "\n";
-			return;
+			//return;
 		}
 	}
 	
