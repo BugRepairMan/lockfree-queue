@@ -43,20 +43,18 @@ public:
 		node->next.store(p);
 
 		_q_head = _q_tail = {node, 0};
-		
+
 		assert(std::atomic<Pointer<T>>{}.is_lock_free() && "atomic<Pointer<T> is not lock free!\n");
 	}
 
 	void enqueue(T value)
 	{
-		Pointer<T> local_tail;
-		Pointer<T> local_next;
-		Pointer<T> desired; // for the desired in CAS.
+		Pointer<T> local_tail;	// owned by only one thread.
+		Pointer<T> local_next;	// owned by only one thread.
+		Pointer<T> desired; 	// for the desired in CAS.
 
 		Node<T> *node = new Node<T> ();
 		node->value = value;
-		//node->next.load().ptr = NULL;
-		//node->next.load().count = 0;
 		Pointer<T> p;
 		p.ptr = nullptr;
 		p.count = 0;
@@ -65,7 +63,8 @@ public:
 		while(1) 
 		{
 			local_tail = _q_tail.load();
-			local_next = _q_tail.load().ptr->next.load();
+			//local_next = _q_tail.load().ptr->next.load();
+			local_next = local_tail.ptr->next;
 			if (local_tail == _q_tail.load()) 
 			{
 				if (local_next.ptr == NULL)

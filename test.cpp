@@ -5,11 +5,7 @@
 #include <chrono>
 #include "cas_queue.h"
 
-//#include <boost/lockfree/queue.hpp>
-
-//using namespace std;
-
-#define N_ELEM 1000000
+#define N_ELEM 1000000 // total mount of item for all producers
 
 std::vector<int> dequeued(N_ELEM);
 int n_consume = 0;
@@ -130,22 +126,76 @@ void cas_multiPmultiC(int n_threads) {
 				for (int j = 0; j < step; ++j) {
 					q.enqueue( i*step+j );
 				}
+			std::cout << "producer: " << i << " finish\n";
 			}, i);
 	}
 
 	// Consumers
 	for (int i = n_threads; i < n_threads*2; ++i) {
-		threads[i] = std::thread([&]() {
+		threads[i] = std::thread([&](int i) {
 			int item;
 			for(int j = 0; j < step; ++j) {
 				while(!q.dequeue(&item))	;
 				dequeued[item] += 1;
 			}
+			std::cout << "consumer: " << i << " finish\n";
+		}, i );
+	}
+
+	//std::cout << "Debug Checkpoint 1\n";
+	
+	for (int i = 0; i < n_threads*2; ++i) {
+		threads[i].join();
+		//std::cout << "threads " << i << " joined\n";
+	}
+
+	//std::cout << "Debug Checkpoint 2\n";
+
+	auto end = std::chrono::high_resolution_clock::now();
+	//auto diff = end - start;
+	std::chrono::duration<double> diff = end -start;
+	std::cout << "Chrono time: " << diff.count() << "s\n";
+
+	// Make sure everything went in and came back out!
+	for(int i = 0; i < N_ELEM; ++i) {
+		if(dequeued[i] != 1) {
+			std::cout << "Fail: index=" << i <<" value: " << dequeued[i] << "\n";
+			//return;
+		}
+	}
+	
+	std::cout << "Success!\n";
+}
+
+void cas_onePmultiC(int n_threads) {
+	std::cout << "1 Producer " << n_threads << " Consumer\n";
+	CAS_Queue<int> q;
+	std::vector<std::thread> consumers(n_threads);
+	int step = N_ELEM/n_threads;
+
+	auto start = std::chrono::high_resolution_clock::now();
+
+	// Producers
+	auto producer = std::thread([&]() {
+				for (int i = 0; i < N_ELEM; ++i) {
+					q.enqueue(i);
+				}
+			});
+
+	// Consumers
+	for (int i = 0; i < n_threads; ++i) {
+		consumers[i] = std::thread([&]() {
+			int item;
+			for(int j = 0; j < step; ++j) {	// Each consumer takes step items from the queue.
+				while(!q.dequeue(&item))	;
+				dequeued[item] += 1;	// As each item exists only once, so dequeued is not needed to guarded.
+			}
 		} );
 	}
 
-	for (int i = 0; i < n_threads*2; ++i) {
-		threads[i].join();
+	producer.join();
+	for (int i = 0; i < n_threads; ++i) {
+		consumers[i].join();
 	}
 
 	auto end = std::chrono::high_resolution_clock::now();
@@ -176,7 +226,9 @@ int main(int argc, char** argv)
 	}
 	
 	//multiPmultiC(n_threads);
+	
 	cas_multiPmultiC(n_threads);
+	//cas_onePmultiC(n_threads);
 
 	//oneProducerMultiConcumers(n_threads);
 
