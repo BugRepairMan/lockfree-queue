@@ -23,7 +23,7 @@ struct Pointer {
 template <typename T>
 struct Node{
 	T value;
-	std::atomic<Pointer<T>> next;
+	alignas(16) std::atomic<Pointer<T>> next; // gcc4.8.4 cannot align automatically, fixed in gcc5.1.
 };
 
 template<typename T>
